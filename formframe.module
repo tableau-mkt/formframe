@@ -15,7 +15,7 @@ function formframe_menu() {
     $menu[$path] = array(
       'title' => $config['title'],
       'type' => MENU_CALLBACK,
-      'page callback' => 'drupal_get_form',
+      'page callback' => 'formframe_get_form',
       'page arguments' => array($config['form']),
       'access callback' => TRUE,
       'delivery callback' => 'formframe_deliver_html_page',
@@ -42,6 +42,27 @@ function formframe_theme() {
   );
 
   return $registry;
+}
+
+/**
+ * Primary page callback for form frames; basically a wrapper around the core
+ * drupal_get_form() function.
+ *
+ * @see formframe_menu()
+ * @see drupal_get_form()
+ */
+function formframe_get_form($form_id) {
+  $form_state = array();
+
+  $args = func_get_args();
+  // Remove $form_id from the arguments.
+  array_shift($args);
+  $form_state['build_info']['args'] = $args;
+
+  // Attach the form frame configuration in the build info.
+  $form_state['build_info']['formframe'] = formframe_form_config(current_path());
+
+  return drupal_build_form($form_id, $form_state);
 }
 
 /**
@@ -107,14 +128,21 @@ function formframe_render_page($page) {
  * Implements hook_form_alter().
  */
 function formframe_form_alter(&$form, &$form_state, $form_id) {
-  $config = formframe_form_config(current_path());
+  // Check that this is a formframe-built form.
+  if (isset($form_state['build_info']['formframe'])) {
+    $config = $form_state['build_info']['formframe'];
+    $path = drupal_get_path('module', 'formframe');
 
-  // Apply the form redirect, if provided.
-  if ($config && $config['form'] === $form_id && !empty($config['redirect'])) {
-    $form_state['redirect'] = url($config['redirect'], array(
-      'absolute' => TRUE,
-      'external' => FALSE,
-    ));
+    // Apply redirects as necessary.
+    if (!empty($config['redirect'])) {
+      $form_state['redirect'] = url($config['redirect'], array(
+        'absolute' => TRUE,
+        'external' => FALSE,
+      ));
+    }
+
+    // Add script to automatically target all links to parent.
+    $form['#attached']['js'][] = $path . '/js/target-parent.js';
   }
 }
 
