@@ -1,0 +1,179 @@
+<?php
+
+/**
+ * @file
+ * Module hooks and functions for the Form Frame module.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function formframe_menu() {
+  $menu = array();
+
+  foreach (formframe_form_configs() as $path => $config) {
+    $menu[$path] = array(
+      'title' => $config['title'],
+      'type' => MENU_CALLBACK,
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array($config['form']),
+      'access callback' => TRUE,
+      'delivery callback' => 'formframe_deliver_html_page',
+    );
+  }
+
+  return $menu;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function formframe_theme() {
+  $registry['formframe'] = array(
+    'variables' => array(
+      'form' => array(),
+      'styles' => '',
+      'scripts' => '',
+      'head' => '',
+      'head_title' => '',
+    ),
+    'template' => 'formframe',
+    'path' => drupal_get_path('module', 'formframe') . '/theme',
+  );
+
+  return $registry;
+}
+
+/**
+ * HTML page delivery callback. Similar to drupal_deliver_html_page(), but uses
+ * our custom html template and renders only the form (no regions).
+ *
+ * @see drupal_deliver_html_page()
+ * @see formframe_menu()
+ */
+function formframe_deliver_html_page($callback_result = NULL) {
+  // If we received a response and we know how to deal with it, deal with it.
+  if (isset($callback_result) && !is_int($callback_result)) {
+    if (is_null(drupal_get_http_header('Content-Type'))) {
+      drupal_add_http_header('Content-Type', 'text/html; charset=utf-8');
+    }
+
+    // Send appropriate HTTP-Header for browsers and search engines.
+    drupal_add_http_header('Content-Language', $GLOBALS['language']->language);
+
+    // Print anything besides a menu constant, assuming it's not NULL or
+    // undefined.
+    $config = formframe_form_config(current_path());
+    formframe_apply_configs($callback_result, $config);
+    $page = formframe_render_page($callback_result);
+    print theme('formframe', array('form' => $page));
+
+    // Perform end-of-request tasks.
+    drupal_page_footer();
+  }
+  // Otherwise, hand-off to the standard delivery callback.
+  else {
+    drupal_deliver_html_page($callback_result);
+  }
+}
+
+/**
+ * Form frame page render callback. Similar to drupal_render_page(), but only
+ * returns the contents of the main system content region.
+ *
+ * @see drupal_render_page()
+ * @see formframe_deliver_html_page()
+ */
+function formframe_render_page($page) {
+  drupal_set_page_content($page);
+  $page = element_info('page');
+
+  // Go through the normal page rendering motions, but separately. This ensures
+  // that any global-scope CSS/JS that this form might rely on is included too.
+  $page_copy = $page;
+  foreach (module_implements('page_build') as $module) {
+    $function = $module . '_page_build';
+    $function($page_copy);
+  }
+  drupal_alter('page', $page_copy);
+  drupal_render($page_copy);
+
+  // Ultimately, just return the rendered version of the main content area.
+  $page['content']['system_main'] = drupal_set_page_content();
+  return drupal_render($page['content']['system_main']);
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function formframe_form_alter(&$form, &$form_state, $form_id) {
+  $config = formframe_form_config(current_path());
+
+  // Apply the form redirect, if provided.
+  if ($config && $config['form'] === $form_id && !empty($config['redirect'])) {
+    $form_state['redirect'] = url($config['redirect'], array(
+      'absolute' => TRUE,
+      'external' => FALSE,
+    ));
+  }
+}
+
+/**
+ * Template preprocessor for the main formframe chrome.
+ */
+function template_preprocess_formframe(&$vars) {
+  // Take care of all things usually taken care of by core for a page view.
+  $vars['styles'] = drupal_get_css();
+  $vars['scripts'] = drupal_get_js();
+  $vars['head'] = drupal_get_html_head();
+  $vars['head_title'] = drupal_get_title();
+  $vars['language'] = $GLOBALS['language'];
+  $vars['language']->dir = $GLOBALS['language']->direction ? 'rtl' : 'ltr';
+  $vars['rdf_namespaces'] = drupal_get_rdf_namespaces();
+  $vars['grddl_profile'] = 'http://www.w3.org/1999/xhtml/vocab';
+}
+
+/**
+ * Applies the provided configurations against a given form.
+ * @param array $form
+ * @param array $config
+ */
+function formframe_apply_configs(&$form, $config) {
+  $form['#attributes']['target'] = $config['target'];
+}
+
+/**
+ * Returns an array of form configurations, keyed by expected path.
+ *
+ * @return array
+ *   Returns an array of form configurations.
+ *
+ * @todo Don't hardcode this. How about ctools?
+ */
+function formframe_form_configs() {
+  return array(
+    'form/frame/asset' => array(
+      'form' => 'user_register_form',
+      'title' => 'Get access now',
+      'target' => '_blank',
+      'redirect' => '<front>',
+    ),
+    'form/frame/trial' => array(
+      'form' => 'user_register_form',
+      'title' => 'Get Tableau Software now',
+      'target' => '_parent',
+      'redirect' => 'node/16462',
+    ),
+  );
+}
+
+/**
+ * Returns an individual form configuration by a given key.
+ *
+ * @return array
+ *   Returns the form configuration. An empty array if none is found.
+ */
+function formframe_form_config($form) {
+  $configs = formframe_form_configs();
+  return isset($configs[$form]) ? $configs[$form] : array();
+}

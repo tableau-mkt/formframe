@@ -1,0 +1,3 @@
+name = Form frame
+description = Display Drupal forms in iframes.
+core = 7.x
