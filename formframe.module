@@ -52,6 +52,11 @@ function formframe_theme() {
  * @see drupal_get_form()
  */
 function formframe_get_form($form_id) {
+  // Suppress the admin menu.
+  if (function_exists('admin_menu_suppress')) {
+    admin_menu_suppress();
+  }
+
   $form_state = array();
 
   $args = func_get_args();
@@ -61,6 +66,9 @@ function formframe_get_form($form_id) {
 
   // Attach the form frame configuration in the build info.
   $form_state['build_info']['formframe'] = formframe_form_config(current_path());
+
+  // Allow other modules to alter this config before the form is built.
+  drupal_alter('formframe_prebuild', $form_id, $form_state);
 
   return drupal_build_form($form_id, $form_state);
 }
@@ -83,9 +91,10 @@ function formframe_deliver_html_page($callback_result = NULL) {
     drupal_add_http_header('Content-Language', $GLOBALS['language']->language);
 
     // Print anything besides a menu constant, assuming it's not NULL or
-    // undefined.
+    // undefined. Allow other modules to do one last alter.
     $config = formframe_form_config(current_path());
     formframe_apply_configs($callback_result, $config);
+    drupal_alter('formframe_prerender', $callback_result);
     $page = formframe_render_page($callback_result);
     print theme('formframe', array('form' => $page));
 
@@ -143,6 +152,15 @@ function formframe_form_alter(&$form, &$form_state, $form_id) {
 
     // Add script to automatically target all links to parent.
     $form['#attached']['js'][] = $path . '/js/target-parent.js';
+
+    // Add some inline CSS via query params.
+    $form['#attached']['css']['formframe_css_overrides'] = array(
+      'data' => formframe_get_css_overrides($_GET),
+      'type' => 'inline',
+      'weight' => 1000,
+      'group' => CSS_THEME,
+      'preprocess' => FALSE,
+    );
   }
 }
 
@@ -204,4 +222,53 @@ function formframe_form_configs() {
 function formframe_form_config($form) {
   $configs = formframe_form_configs();
   return isset($configs[$form]) ? $configs[$form] : array();
+}
+
+/**
+ * Implements hook_hook_info().
+ */
+function formframe_hook_info() {
+  return array(
+    'formframe_prebuild_alter' => array('group' => 'formframe'),
+    'formframe_prerender_alter' => array('group' => 'formframe'),
+    'formframe_query_params' => array('group' => 'formframe'),
+    'formframe_query_params_alter' => array('group' => 'formframe'),
+  );
+}
+
+/**
+ * Returns a (safe) string of CSS properties, useful for altering the basic
+ * display of a form.
+ *
+ * @param array $params
+ *   An array of query parameters that might be useful for altering page styles.
+ *
+ * @return string
+ *   A string of CSS representing the style changes desired.
+ */
+function formframe_get_css_overrides($query) {
+  $overrides = module_invoke_all('formframe_query_params');
+  drupal_alter('formframe_query_params', $overrides);
+  $styles = array();
+
+  foreach ($overrides as $param => $css) {
+    if (isset($query[$param]) && !empty($query[$param])) {
+      $callback = function_exists($css['filter']) ? $css['filter'] : 'check_plain';
+      if ($rule = $callback($query[$param])) {
+        $rule = $css['style'] . ':' . $rule . ' !important;';
+        if (isset($styles[$css['selector']])) {
+          $styles[$css['selector']] .= $rule;
+        }
+        else {
+          $styles[$css['selector']] = $rule;
+        }
+      }
+    }
+  }
+
+  $css_response = '';
+  foreach ($styles as $selector => $style) {
+    $css_response .= $selector . '{' . $style . "}\n";
+  }
+  return $css_response;
 }
