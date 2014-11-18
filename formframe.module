@@ -11,6 +11,16 @@
 function formframe_menu() {
   $menu = array();
 
+  $menu['admin/config/services/form-frame'] = array(
+    'title' => 'Form Frame',
+    'description' => 'Make global form frame configurations',
+    'type' => MENU_NORMAL_ITEM,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('formframe_global_admin'),
+    'file' => 'formframe.admin.inc',
+    'access arguments' => array('administer form frame'),
+  );
+
   foreach (formframe_form_configs() as $path => $config) {
     $menu[$path] = array(
       'title' => $config['title'],
@@ -23,6 +33,19 @@ function formframe_menu() {
   }
 
   return $menu;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function formframe_permission() {
+  return array(
+    'administer form frame' => array(
+      'title' => t('Administer form frame'),
+      'description' => t('Add new form frames and edit global configurations'),
+      'restrict access' => TRUE,
+    ),
+  );
 }
 
 /**
@@ -42,6 +65,24 @@ function formframe_theme() {
   );
 
   return $registry;
+}
+
+/**
+ * Implements hook_library().
+ */
+function formframe_library() {
+  return array(
+    'framecomm' => array(
+      'title' => 'Frame communications',
+      'version' => '1.0.0',
+      'js' => array(
+        drupal_get_path('module', 'formframe') . '/js/framecomm.js' => array(),
+      ),
+      'dependencies' => array(
+        array('system', 'jquery.bbq'),
+      ),
+    ),
+  );
 }
 
 /**
@@ -152,6 +193,22 @@ function formframe_form_alter(&$form, &$form_state, $form_id) {
 
     // Add script to automatically target all links to parent.
     $form['#attached']['js'][] = $path . '/js/target-parent.js';
+
+    // Add script to enable communication with the parent.
+    $form['#attached']['library'][] = array('formframe', 'framecomm');
+    $form['#attached']['js'][] = array(
+      'type' => 'file',
+      'data' => $path . '/js/framecomm-init.js',
+      'group' => JS_LIBRARY,
+    );
+    $form['#attached']['js'][] = array(
+      'type' => 'setting',
+      'data' => array(
+        'formframe' => array(
+          'whitelist' => explode("\n", variable_get('formframe_origin_whitelist', '')),
+        ),
+      ),
+    );
 
     // Add some inline CSS via query params.
     $form['#attached']['css']['formframe_css_overrides'] = array(

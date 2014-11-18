@@ -1,0 +1,13 @@
+<?php
+
+/**
+ * @file
+ * Install and update hooks for the Form Frame module.
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function formframe_uninstall() {
+  variable_del('formframe_origin_whitelist');
+}
