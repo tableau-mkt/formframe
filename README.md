@@ -10,7 +10,7 @@ Embed your Drupal forms anywhere on the internet.
 #### Manually embedding
 ```html
 <div class="formframe-container">
-  <script src="https://example.com/sites/all/modules/formframe/js/loader.min.js" async defer></script>
+  <script src="https://example.com/form/frame/loader.js" async defer></script>
   <noscript><!-- fallback iframe goes here --></noscript>
   <object>
     <param name="formName" value="trial" />

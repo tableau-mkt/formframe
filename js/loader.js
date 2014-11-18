@@ -1,6 +1,6 @@
 window.FF = window.FF || {};
 
-(function(window, document, FF) {
+(function(window, document) {
   var _FF = {};
 
   /**
@@ -21,7 +21,7 @@ window.FF = window.FF || {};
       iframe.src = FF.constructUrl(formAttributes);
       iframe.scrolling = 'no';
       iframe.frameborder = '0';
-      iframe.id = formAttributes.ffid;
+      iframe.id = formAttributes['__ffid'];
       if (formAttributes.width) {
         iframe.width = formAttributes.width;
       }
@@ -87,24 +87,23 @@ window.FF = window.FF || {};
    *   An object representing the settings for a given form frame.
    */
   FF.getSettings = function(container) {
-    // @todo Pull this in dynamically from hook_formframe_query_params().
-    var settings = {
-        ffid: 'ffid' + Math.random().toString().replace("0.", ""),
-        formName: null,
-        bodyBackgroundColor: null,
-        inputBackgroundColor: null,
-        width: null
-      },
-      setting,
-      param;
+    var settings = FF.drupalDynamicSettings || {},
+        returnSettings = {},
+        setting,
+        param;
+
+    // Custom, hard-coded params we take care of internally.
+    settings.width = 'width';
+    settings.formName = 'formName';
 
     for (setting in settings)  {
       if (param = container.querySelector('param[name="' + setting + '"]')) {
-        settings[setting] = param.value || null;
+        returnSettings[settings[setting]] = param.value || null;
       }
     }
 
-    return settings;
+    returnSettings['__ffid'] = 'ffid' + Math.random().toString().replace("0.", "");
+    return returnSettings;
   };
 
   /**
@@ -119,7 +118,17 @@ window.FF = window.FF || {};
    *   A string representing the iframe URL.
    */
   FF.constructUrl = function(formSettings) {
-    return this.settings.baseUrl + '/form/frame/' + formSettings.formName + '?__ffid=' + formSettings.ffid;
+    var formName = formSettings.formName,
+        queryString = '?',
+        param;
+
+    for (param in formSettings) {
+      if (param !== 'width' && param !== 'formName') {
+        queryString += param + '=' + encodeURI(formSettings[param]) + '&';
+      }
+    }
+
+    return FF.settings.baseUrl + 'form/frame/' + formName + queryString.substr(0, queryString.length - 1);
   };
 
   /**
@@ -152,6 +161,7 @@ window.FF = window.FF || {};
   _FF.initBaseUrl = function() {
     var scripts = document.getElementsByTagName('script'),
         scriptName = "loader.js",
+        prefix = FF.drupalDynamicPrefix || '/',
         src,
         l,
         length,
@@ -162,7 +172,7 @@ window.FF = window.FF || {};
       l = src.length;
       length =scriptName.length;
       if (src.substr(l - length) === scriptName) {
-        FF.settings.baseUrl = "http://" + src.substr(0, l - length).split("/")[2];
+        FF.settings.baseUrl = "http://" + src.substr(0, l - length).split("/")[2] + prefix;
       }
     }
   };
@@ -194,7 +204,7 @@ window.FF = window.FF || {};
     }
   };
 
-})(window, document, window.FF);
+})(window, document);
 
 /**
  * CustomEvent polyfill for old versions of IE.

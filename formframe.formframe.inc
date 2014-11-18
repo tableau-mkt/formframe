@@ -6,34 +6,44 @@
  */
 
 /**
- * Implements hook_formframe_query_params().
+ * Implements hook_formframe_parameters().
  */
-function formframe_formframe_query_params() {
+function formframe_formframe_parameters() {
   return array(
-    'bg-body' => array(
+    'bodyBackgroundColor' => array(
+      'type' => 'css_override',
+      'filter' => 'formframe_safe_css_color_value',
+      'query' => 'bg-body',
       'selector' => 'body',
       'style' => 'background-color',
-      'filter' => 'formframe_safe_css_color_value'
     ),
-    'bg-input' => array(
+    'inputBackgroundColor' => array(
+      'type' => 'css_override',
+      'filter' => 'formframe_safe_css_color_value',
+      'query' => 'bg-input',
       'selector' => 'select,input.form-text,textarea',
       'style' => 'background-color',
-      'filter' => 'formframe_safe_css_color_value'
     ),
-    'bg-submit' => array(
+    'submitBackgroundColor' => array(
+      'type' => 'css_override',
+      'filter' => 'formframe_safe_css_color_value',
+      'query' => 'bg-submit',
       'selector' => 'button,input[type="submit"]',
       'style' => 'background-color',
-      'filter' => 'formframe_safe_css_color_value'
     ),
-    'c-cta' => array(
+    'submitColor' => array(
+      'type' => 'css_override',
+      'filter' => 'formframe_safe_css_color_value',
+      'query' => 'c-cta',
       'selector' => 'button,input[type="submit"]',
       'style' => 'color',
-      'filter' => 'formframe_safe_css_color_value'
     ),
-    'c-link' => array(
+    'linkColor' => array(
+      'type' => 'css_override',
+      'filter' => 'formframe_safe_css_color_value',
+      'query' => 'c-link',
       'selector' => 'a',
       'style' => 'color',
-      'filter' => 'formframe_safe_css_color_value'
     ),
   );
 }

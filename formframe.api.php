@@ -23,17 +23,32 @@
  */
 
 /**
- * Returns an array of CSS override configurations keyed by their associated
- * query parameters, as described below. Note that this module already provides
- * some basic CSS overrides. See formframe.formframe.inc for details.
+ * Returns an array of form frame configuration parameters, keyed by their
+ * associated object parameter name (visible in the embed code) and whose
+ * definition is described below. Note that this module already provides
+ * some basic parameters for CSS overrides.
+ *
+ * Generally, this hook is useful for creating user-configurable properties
+ * associated with your forms. The form loader will search for these parameters
+ * in the form embed configuration and pass them back in the iframe as query
+ * parameters.
+ *
+ * It's your responsibility to hook into those query parameters and provide the
+ * custom functionality you desire based on them.
+ *
+ * See formframe.formframe.inc for a basic example.
  *
  * @return array
- *   Returns an associative array of CSS override configurations (described
- *   below), keyed by the query parameter name associated with the config. CSS
- *   override configurations are arrays with the following keys:
- *   - selector: The CSS selector that the override targets (e.g. "#some-id").
- *   - style: The CSS style that the query parameter value will override (for
- *     example, "background-color" to alter background color.
+ *   Returns an associative array of form frame parameter definitions (described
+ *   below), keyed by the parameter name associated with the config. Parameter
+ *   configurations are arrays with the following keys:
+ *   - type: (Required) A string representing theT "type" of parameter this
+ *     configuration represents. This module provides one type out of the box:
+ *     "css_override," but you can declare as many as you need. You can load
+ *     parameter values using the formframe_parameter_values() function.
+ *   - query: (Optional) The name of the query parameter to use when a form
+ *     frame parameter is passed back via the iframe URL. If none is provided,
+ *     the name of the parameter (the array key) will be used.
  *   - filter: (Optional) A custom function to filter query parameter values. If
  *     no filter is provided, this defaults to check_plain() for security
  *     reasons. You may wish to provide custom filtering, however.
@@ -41,18 +56,45 @@
  *     query parameter value) and return the filtered value of the string (or
  *     empty on error).
  */
-function hook_formframe_query_params() {
-  $overrides = array();
+function hook_formframe_parameters() {
+  $parameters = array();
 
   // Allow the font-family to be overridden. This would make something like this
   // possible: http://example.com/form/frame/my-form?font=Helvetica
-  $overrides['font'] = array(
+  // Via a form frame embed param like this:
+  // <param name="frameFont" value="Helvetica" />
+  $parameters['frameFont'] = array(
+    'type' => 'css_override',
+    'query' => 'font',
+    'filter' => 'my_module_filter_down_to_just_some_fonts',
+    // These are specific to the way css_override type parameters work.
     'selector' => '*',
     'style' => 'font-family',
-    'my_module_filter_down_to_just_some_fonts',
   );
 
-  return $overrides;
+  // A basic custom parameter definition:
+  // In a form alter (or one of the form frame hooks below), you could load the
+  // values for attributes of this type with formframe_parameter_values('my_type');
+  $parameters['myCustomAttribute'] = array(
+    'type' => 'my_type',
+    'query' => 'mca',
+  );
+
+  return $parameters;
+}
+
+/**
+ * Alter form frame parameter configurations before they're used throughout the
+ * form frame system.
+ *
+ * @param array $parameters
+ *   An associative array of form frame parameter configurations keyed by their
+ *   respective names; basically the result of invoking all implementations of
+ *   hook_formframe_parameters().
+ */
+function hook_formframe_parameters_alter(&$parameters) {
+  // Use vanity query param names.
+  $parameters['inputBackgroundColor']['query'] = 'bg';
 }
 
 /**

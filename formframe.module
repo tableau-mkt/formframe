@@ -6,6 +6,18 @@
  */
 
 /**
+ * Implements hook_hook_info().
+ */
+function formframe_hook_info() {
+  return array(
+    'formframe_prebuild_alter' => array('group' => 'formframe'),
+    'formframe_prerender_alter' => array('group' => 'formframe'),
+    'formframe_parameters' => array('group' => 'formframe'),
+    'formframe_parameters_alter' => array('group' => 'formframe'),
+  );
+}
+
+/**
  * Implements hook_menu().
  */
 function formframe_menu() {
@@ -19,6 +31,15 @@ function formframe_menu() {
     'page arguments' => array('formframe_global_admin'),
     'file' => 'formframe.admin.inc',
     'access arguments' => array('administer form frame'),
+  );
+
+  $menu['form/frame/loader.js'] = array(
+    'title' => 'Form frame JavaScript loader',
+    'type' => MENU_CALLBACK,
+    'page callback' => 'formframe_js_loader',
+    'page arguments' => array(),
+    'file' => 'formframe.loader.inc',
+    'access callback' => TRUE,
   );
 
   foreach (formframe_form_configs() as $path => $config) {
@@ -212,7 +233,7 @@ function formframe_form_alter(&$form, &$form_state, $form_id) {
 
     // Add some inline CSS via query params.
     $form['#attached']['css']['formframe_css_overrides'] = array(
-      'data' => formframe_get_css_overrides($_GET),
+      'data' => formframe_get_css_overrides(),
       'type' => 'inline',
       'weight' => 1000,
       'group' => CSS_THEME,
@@ -282,43 +303,107 @@ function formframe_form_config($form) {
 }
 
 /**
- * Implements hook_hook_info().
+ * Returns form frame parameter configurations, optionally filtered by type.
+ *
+ * @param string $type
+ *   (Optional) Filters the results to parameter configurations of a given type.
+ *
+ * @return array
+ *   An associative array of form frame parameter configurations, keyed by
+ *   parameter name, and optionally filtered by $type.
  */
-function formframe_hook_info() {
-  return array(
-    'formframe_prebuild_alter' => array('group' => 'formframe'),
-    'formframe_prerender_alter' => array('group' => 'formframe'),
-    'formframe_query_params' => array('group' => 'formframe'),
-    'formframe_query_params_alter' => array('group' => 'formframe'),
-  );
+function formframe_parameters($type = '*') {
+  $return = &drupal_static(__FUNCTION__, array());
+
+  if (!isset($return[$type])) {
+    // Load all into static cache if they haven't already.
+    if (!isset($return['*'])) {
+      // Load and alter form frame parameter configurations.
+      $parameters = module_invoke_all('formframe_parameters');
+      drupal_alter('formframe_parameters', $parameters);
+      $return['*'] = $parameters;
+    }
+
+    // Filter parameter configurations by the given type.
+    if ($type !== '*') {
+      $return[$type] = array();
+      foreach ($return['*'] as $parameter => $config) {
+        if ($config['type'] === $type) {
+          $return[$type][$parameter] = $config;
+        }
+      }
+    }
+  }
+
+  return $return[$type];
+}
+
+/**
+ * Returns safe form frame parameter values from the global page request ($_GET)
+ * keyed by the names of the form frame parameter (as opposed to the name of the
+ * query parameter).
+ *
+ * @param string $type
+ *   (Optional) Use this to filter down to specific form frame parameter types.
+ *
+ * @return array
+ *   Returns an associative array where the key is the form frame parameter name
+ *   (e.g. the keys returned in hook_formframe_parameters()) and the value is
+ *   the sanitized value of the query parameter, run through the provided filter
+ *   callback (or check_plain by default).
+ */
+function formframe_parameter_values($type = '*') {
+  $values = &drupal_static(__FUNCTION__, array());
+
+  if (!isset($values[$type])) {
+    $values[$type] = array();
+
+    // Iterate through defined parameter definitions for this type.
+    $parameters = formframe_parameters($type);
+    foreach ($parameters as $name => $config) {
+      // Normalize the query parameter we're searching for.
+      $param = isset($config['query']) ? $config['query'] : $name;
+
+      // Normalize the filter callback we'll be applying.
+      $callback = 'check_plain';
+      if (isset($config['filter']) && function_exists($config['filter'])) {
+        $callback = $config['filter'];
+      }
+
+      // If the value is set, run it through the filter and prepare a response.
+      if (isset($_GET[$param])) {
+        $values[$type][$name] = $callback($_GET[$param]);
+      }
+    }
+  }
+
+  return $values[$type];
 }
 
 /**
  * Returns a (safe) string of CSS properties, useful for altering the basic
  * display of a form.
  *
- * @param array $params
- *   An array of query parameters that might be useful for altering page styles.
- *
  * @return string
  *   A string of CSS representing the style changes desired.
  */
-function formframe_get_css_overrides($query) {
-  $overrides = module_invoke_all('formframe_query_params');
-  drupal_alter('formframe_query_params', $overrides);
+function formframe_get_css_overrides() {
+  $parameters = formframe_parameters('css_override');
+  $values = formframe_parameter_values('css_override');
   $styles = array();
 
-  foreach ($overrides as $param => $css) {
-    if (isset($query[$param]) && !empty($query[$param])) {
-      $callback = function_exists($css['filter']) ? $css['filter'] : 'check_plain';
-      if ($rule = $callback($query[$param])) {
-        $rule = $css['style'] . ':' . $rule . ' !important;';
-        if (isset($styles[$css['selector']])) {
-          $styles[$css['selector']] .= $rule;
-        }
-        else {
-          $styles[$css['selector']] = $rule;
-        }
+  foreach ($values as $param => $value) {
+    $css = $parameters[$param];
+
+    // Only account for non-empty CSS styles.
+    if (!empty($value)) {
+      $value = $css['style'] . ':' . $value . ' !important;';
+
+      if (isset($styles[$css['selector']])) {
+        $styles[$css['selector']] .= $value;
+      }
+      else {
+        $styles[$css['selector']] = $value;
       }
     }
   }
