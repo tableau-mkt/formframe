@@ -42,12 +42,12 @@ function formframe_menu() {
     'access callback' => TRUE,
   );
 
-  foreach (formframe_form_configs() as $path => $config) {
-    $menu[$path] = array(
-      'title' => $config['title'],
+  foreach (formframe_get_forms() as $path_part => $config) {
+    $menu['form/frame/' . $path_part] = array(
+      'title' => $config->title,
       'type' => MENU_CALLBACK,
-      'page callback' => 'formframe_get_form',
-      'page arguments' => array($config['form']),
+      'page callback' => 'formframe_drupal_get_form',
+      'page arguments' => array($config->form),
       'access callback' => TRUE,
       'delivery callback' => 'formframe_deliver_html_page',
     );
@@ -123,7 +123,7 @@ function formframe_ctools_plugin_directory($module, $type) {
  * @see formframe_menu()
  * @see drupal_get_form()
  */
-function formframe_get_form($form_id) {
+function formframe_drupal_get_form($form_id) {
   // Suppress the admin menu.
   if (function_exists('admin_menu_suppress')) {
     admin_menu_suppress();
@@ -137,7 +137,7 @@ function formframe_get_form($form_id) {
   $form_state['build_info']['args'] = $args;
 
   // Attach the form frame configuration in the build info.
-  $form_state['build_info']['formframe'] = formframe_form_config(current_path());
+  $form_state['build_info']['formframe'] = formframe_get_form(arg(2));
 
   // Allow other modules to alter this config before the form is built.
   drupal_alter('formframe_prebuild', $form_id, $form_state);
@@ -164,7 +164,7 @@ function formframe_deliver_html_page($callback_result = NULL) {
 
     // Print anything besides a menu constant, assuming it's not NULL or
     // undefined. Allow other modules to do one last alter.
-    $config = formframe_form_config(current_path());
+    $config = formframe_get_form(arg(2));
     formframe_apply_configs($callback_result, $config);
     drupal_alter('formframe_prerender', $callback_result);
     $page = formframe_render_page($callback_result);
@@ -215,7 +215,7 @@ function formframe_form_alter(&$form, &$form_state, $form_id) {
     $path = drupal_get_path('module', 'formframe');
 
     // Apply redirects as necessary.
-    if (!empty($config['redirect'])) {
+    if (isset($config->data['redirect']) && !empty($config->data['redirect'])) {
       $form_state['redirect'] = url($config['redirect'], array(
         'absolute' => TRUE,
         'external' => FALSE,
@@ -273,43 +273,45 @@ function template_preprocess_formframe(&$vars) {
  * @param array $config
  */
 function formframe_apply_configs(&$form, $config) {
-  $form['#attributes']['target'] = $config['target'];
+  if (isset($config->data['target']) && !empty($config->data['target'])) {
+    $form['#attributes']['target'] = $config->data['target'];
+  }
 }
 
 /**
- * Returns an array of form configurations, keyed by expected path.
+ * Returns all currently known form frame configurations.
+ *
+ * @param bool $reset
+ *   (Optional) Whether or not the form frame configuration static cache should
+ *   be reset when loading configs.
  *
  * @return array
- *   Returns an array of form configurations.
- *
- * @todo Don't hardcode this. How about ctools?
+ *   An array of form frame configuration objects.
  */
-function formframe_form_configs() {
-  return array(
-    'form/frame/asset' => array(
-      'form' => 'user_register_form',
-      'title' => 'Get access now',
-      'target' => '_blank',
-      'redirect' => '<front>',
-    ),
-    'form/frame/trial' => array(
-      'form' => 'user_register_form',
-      'title' => 'Get Tableau Software now',
-      'target' => '_parent',
-      'redirect' => 'node/16462',
-    ),
-  );
+function formframe_get_forms($reset = FALSE) {
+  $definitions = drupal_static(__FUNCTION__, array());
+
+  if ($definitions === array() || $reset) {
+    ctools_include('export');
+    ctools_export_load_object_reset('formframes');
+    $definitions = ctools_export_load_object('formframes', 'all');
+  }
+
+  return $definitions;
 }
 
 /**
- * Returns an individual form configuration by a given key.
+ * Returns an individual form frame configuration by a given path part key.
  *
- * @return array
- *   Returns the form configuration. An empty array if none is found.
+ * @param string $form
+ *   The form frame configuration key (URL path part).
+ *
+ * @return object|bool
+ *   The individual form frame configuration object, FALSE otherwise.
  */
-function formframe_form_config($form) {
-  $configs = formframe_form_configs();
-  return isset($configs[$form]) ? $configs[$form] : array();
+function formframe_get_form($form) {
+  $definitions = formframe_get_forms();
+  return isset($definitions[$form]) ? $definitions[$form] : FALSE;
 }
 
 /**
