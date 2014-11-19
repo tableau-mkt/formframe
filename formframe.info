@@ -1,3 +1,6 @@
 name = Form frame
-description = Display Drupal forms in iframes.
+description = Embed Drupal forms in iframes on non-Drupal sites.
 core = 7.x
+configure = admin/structure/form-frames
+
+dependencies[] = ctools

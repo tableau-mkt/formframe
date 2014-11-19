@@ -23,10 +23,10 @@ function formframe_hook_info() {
 function formframe_menu() {
   $menu = array();
 
-  $menu['admin/config/services/form-frame'] = array(
-    'title' => 'Form Frame',
+  $menu['admin/structure/form-frames/settings'] = array(
+    'title' => 'Global settings',
     'description' => 'Make global form frame configurations',
-    'type' => MENU_NORMAL_ITEM,
+    'type' => MENU_LOCAL_TASK,
     'page callback' => 'drupal_get_form',
     'page arguments' => array('formframe_global_admin'),
     'file' => 'formframe.admin.inc',
@@ -104,6 +104,16 @@ function formframe_library() {
       ),
     ),
   );
+}
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function formframe_ctools_plugin_directory($module, $type) {
+  // Load the export_ui plugin.
+  if ($type === 'export_ui') {
+    return 'plugins/export_ui';
+  }
 }
 
 /**
@@ -413,4 +423,73 @@ function formframe_get_css_overrides() {
     $css_response .= $selector . '{' . $style . "}\n";
   }
   return $css_response;
+}
+
+/**
+ * Export callback for form frame exportables.
+ */
+function formframe_export_formframes($context, $indent = '') {
+  $output = ctools_export_object('formframes', $context, $indent);
+  $translatables = array();
+  foreach (array('title') as $key) {
+    if (!empty($context->{$key})) {
+      $translatables[] = $context->{$key};
+    }
+  }
+  $translatables = array_filter(array_unique($translatables));
+  if (!empty($translatables)) {
+    $output .= "\n";
+    $output .= "{$indent}// Translatables included for use with string extractors like potx.\n";
+    sort($translatables);
+    foreach ($translatables as $string) {
+      $output .= "{$indent}t(" . ctools_var_export($string) . ");\n";
+    }
+  }
+  return $output;
+}
+
+/**
+ * Save callback for form frame exportables.
+ */
+function formframe_save_formframes($object) {
+  if ($object->export_type & EXPORT_IN_DATABASE) {
+    // Existing record.
+    $update = array('pid');
+  }
+  else {
+    // New record.
+    $update = array();
+    $object->export_type = EXPORT_IN_DATABASE;
+  }
+  $return = drupal_write_record('formframes', $object, $update);
+
+  // Always rebuild the menu when saving a form frames.
+  variable_set('menu_rebuild_needed', TRUE);
+
+  return $return;
+}
+
+/**
+ * Status set callback for form frame exportables.
+ */
+function formframe_set_status_formframes($object, $status) {
+  ctools_export_set_object_status($object, $status);
+
+  // Always rebuild the menu when updating the status of a form frame.
+  variable_set('menu_rebuild_needed', TRUE);
+}
+
+/**
+ * Delete callback for form frame exportables.
+ */
+function formframe_delete_formframes($object) {
+  // If we were sent an object, get the export key from it. Otherwise
+  // assume we were sent the export key.
+  $value = is_object($object) ? $object->pid : $object;
+  db_delete('formframes')
+    ->condition('pid', $value)
+    ->execute();
+
+  // Always rebuild the menu when deleting a search collection.
+  variable_set('menu_rebuild_needed', TRUE);
 }

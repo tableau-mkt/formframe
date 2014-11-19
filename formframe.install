@@ -6,6 +6,68 @@
  */
 
 /**
+ * Implements hook_schema().
+ */
+function formframe_schema() {
+  $schema['formframes'] = array(
+    'description' => t('Table storing form frame configurations.'),
+    'export' => array(
+      'key' => 'path',
+      'key name' => 'Path part',
+      'primary key' => 'pid',
+      'identifier' => 'frame',
+      'default hook' => 'default_formframes',
+      'export callback' => 'formframe_export_formframes',
+      'save callback' => 'formframe_save_formframes',
+      'status callback' => 'formframe_set_status_formframes',
+      'delete callback' => 'formframe_delete_formframes',
+      'api' => array(
+        'owner' => 'formframe',
+        'api' => 'default_formframes',
+        'minimum_version' => 1,
+        'current_version' => 1,
+      ),
+    ),
+    'fields' => array(
+      'pid' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Primary key for the table.',
+        'no export' => TRUE,
+      ),
+      'path' => array(
+        'type' => 'varchar',
+        'length' => '50',
+        'description' => 'URL path part and unique ID.',
+      ),
+      'title' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'description' => 'End-user title for the form frame.',
+      ),
+      'form' => array(
+        'type' => 'varchar',
+        'length' => '128',
+        'description' => 'Drupal form rendered by form frame.',
+      ),
+      'data' => array(
+        'type' => 'blob',
+        'size' => 'normal',
+        'description' => 'Form frame configuration data.',
+        'serialize' => TRUE,
+      ),
+    ),
+    'primary key' => array('pid'),
+    'unique keys' => array(
+      'name' => array('path'),
+    ),
+  );
+
+  return $schema;
+}
+
+/**
  * Implements hook_uninstall().
  */
 function formframe_uninstall() {
