@@ -20,7 +20,7 @@ window.FF = window.FF || {};
       iframe = document.createElement('iframe');
       iframe.src = FF.constructUrl(formAttributes);
       iframe.scrolling = 'no';
-      iframe.frameborder = '0';
+      iframe.frameBorder = '0';
       iframe.id = formAttributes['__ffid'];
       if (formAttributes.width) {
         iframe.width = formAttributes.width;
