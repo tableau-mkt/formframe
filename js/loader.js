@@ -42,9 +42,11 @@ window.FF = window.FF || {};
    *   The postmessage event.
    */
   FF.listener = function(event) {
-    var data = event[event.message ? 'message' : 'data'];
+    var data = event[event.message ? 'message' : 'data'],
+        originSansProto = event.origin.replace(/^https?:/, '');
+
     // Only respond to events from our origin.
-    if (FF.settings.baseUrl.substring(0, event.origin.length) === event.origin) {
+    if (FF.settings.baseUrl.substring(0, originSansProto.length) === originSansProto) {
       if (typeof data === 'string') {
         data = JSON.parse(data);
       }
@@ -172,7 +174,7 @@ window.FF = window.FF || {};
       l = src.length;
       length =scriptName.length;
       if (src.substr(l - length) === scriptName) {
-        FF.settings.baseUrl = "http://" + src.substr(0, l - length).split("/")[2] + prefix;
+        FF.settings.baseUrl = "//" + src.substr(0, l - length).split("/")[2] + prefix;
       }
     }
   };
