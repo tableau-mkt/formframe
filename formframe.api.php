@@ -55,9 +55,21 @@
  *     The filter function should take a single string argument (the unfiltered
  *     query parameter value) and return the filtered value of the string (or
  *     empty on error).
+ *   - #form: (Optional) A form API element array. When provided, this is used
+ *     in place of the default form element displayed on the form frame embed
+ *     code generator page. Useful for adding, for example, select options or
+ *     more custom behavior.
  */
 function hook_formframe_parameters() {
   $parameters = array();
+
+  // A basic custom parameter definition:
+  // In a form alter (or one of the form frame hooks below), you could load the
+  // values for attributes of this type with formframe_parameter_values('my_type');
+  $parameters['myCustomAttribute'] = array(
+    'type' => 'my_type',
+    'query' => 'mca',
+  );
 
   // Allow the font-family to be overridden. This would make something like this
   // possible: http://example.com/form/frame/my-form?font=Helvetica
@@ -70,14 +82,18 @@ function hook_formframe_parameters() {
     // These are specific to the way css_override type parameters work.
     'selector' => '*',
     'style' => 'font-family',
-  );
-
-  // A basic custom parameter definition:
-  // In a form alter (or one of the form frame hooks below), you could load the
-  // values for attributes of this type with formframe_parameter_values('my_type');
-  $parameters['myCustomAttribute'] = array(
-    'type' => 'my_type',
-    'query' => 'mca',
+    // Provide a custom form to simplify the form frame embed code page.
+    '#form' => array(
+      '#type' => 'select',
+      '#title' => t('Font override'),
+      '#description' => t('Some description text for site admins'),
+      '#options' => array(
+        '' => ' --- ',
+        'Helvetica' => t('Helvetica'),
+        'Arial' => t('Arial'),
+        'sans-serif' => t('Sans-serif'),
+      ),
+    ),
   );
 
   return $parameters;
