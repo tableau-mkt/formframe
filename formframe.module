@@ -230,7 +230,7 @@ function formframe_form_alter(&$form, &$form_state, $form_id) {
 
     // Apply redirects as necessary.
     if (isset($config->data['redirect']) && !empty($config->data['redirect'])) {
-      $form_state['redirect'] = url($config['redirect'], array(
+      $form_state['redirect'] = url($config->data['redirect'], array(
         'absolute' => TRUE,
         'external' => FALSE,
       ));
