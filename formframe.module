@@ -33,6 +33,16 @@ function formframe_menu() {
     'access arguments' => array('administer form frame'),
   );
 
+  // Pretty much just exists because contextual links are crazy / weird.
+  $menu['admin/structure/form-frames/embed/%'] = array(
+    'title' => 'Embed this form as an iframe',
+    'type' => MENU_LOCAL_ACTION,
+    'context' => MENU_CONTEXT_INLINE,
+    'page callback' => 'formframe_redirect_to_embed_page',
+    'page arguments' => array(4),
+    'access arguments' => array('generate form frame codes'),
+  );
+
   $menu['form/frame/loader.js'] = array(
     'title' => 'Form frame JavaScript loader',
     'type' => MENU_CALLBACK,
@@ -65,6 +75,10 @@ function formframe_permission() {
       'title' => t('Administer form frame'),
       'description' => t('Add new form frames and edit global configurations'),
       'restrict access' => TRUE,
+    ),
+    'generate form frame codes' => array(
+      'title' => t('Generate form frame embeds'),
+      'description' => t('Allows users to generate and copy form frame embed codes'),
     ),
   );
 }
@@ -250,6 +264,18 @@ function formframe_form_alter(&$form, &$form_state, $form_id) {
       'preprocess' => FALSE,
     );
   }
+  // If not, we may want to attach contextual links to generate an embed code.
+  else {
+    if ($forms = formframe_get_forms_by_drupal_form($form_id)) {
+      // For simplicity, just use the first. The embed code page will allow the
+      // user to pick which specific form frame configuration to use.
+      $config = reset($forms);
+      $form['#contextual_links']['formframe'] = array(
+        'admin/structure/form-frames/embed',
+        array($config->path),
+      );
+    }
+  }
 }
 
 /**
@@ -312,6 +338,27 @@ function formframe_get_forms($reset = FALSE) {
 function formframe_get_form($form) {
   $definitions = formframe_get_forms();
   return isset($definitions[$form]) ? $definitions[$form] : FALSE;
+}
+
+/**
+ * Returns form frame configurations by a given Drupal form name.
+ *
+ * @param string $form_id
+ *   The desired Drupal form name / form ID.
+ *
+ * @return array
+ *   An array of form frame configurations for the given Drupal form.
+ */
+function formframe_get_forms_by_drupal_form($form_id) {
+  $results = array();
+
+  foreach (formframe_get_forms() as $id => $config) {
+    if ($config->form === $form_id) {
+      $results[$id] = $config;
+    }
+  }
+
+  return $results;
 }
 
 /**
@@ -494,4 +541,18 @@ function formframe_delete_formframes($object) {
 
   // Always rebuild the menu when deleting a search collection.
   variable_set('menu_rebuild_needed', TRUE);
+}
+
+/**
+ * Redirects users to the form frame embed code page.
+ */
+function formframe_redirect_to_embed_page($name) {
+  // Account for destination.
+  $options = array();
+  if (isset($_GET['destination'])) {
+    $options['query']['destination'] = $_GET['destination'];
+    unset($_GET['destination']);
+  }
+
+  drupal_goto('admin/structure/form-frames/list/' . $name . '/embed', $options);
 }

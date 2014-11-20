@@ -4,3 +4,5 @@ core = 7.x
 configure = admin/structure/form-frames
 
 dependencies[] = ctools
+
+files[] = plugins/export_ui/formframe_ui.php
