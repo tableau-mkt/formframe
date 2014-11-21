@@ -24,6 +24,20 @@ function formframe_formframe_parameters() {
       'selector' => 'select,input.form-text,textarea',
       'style' => 'background-color',
     ),
+    'inputBorderColor' => array(
+      'type' => 'css_override',
+      'filter' => 'formframe_safe_css_color_value',
+      'query' => 'bc-input',
+      'selector' => 'select,input.form-text,textarea',
+      'style' => 'border-color',
+    ),
+    'inputColor' => array(
+      'type' => 'css_override',
+      'filter' => 'formframe_safe_css_color_value',
+      'query' => 'c-input',
+      'selector' => 'select,input.form-text,textarea',
+      'style' => 'color',
+    ),
     'submitBackgroundColor' => array(
       'type' => 'css_override',
       'filter' => 'formframe_safe_css_color_value',
@@ -36,6 +50,13 @@ function formframe_formframe_parameters() {
       'filter' => 'formframe_safe_css_color_value',
       'query' => 'c-cta',
       'selector' => 'button,input[type="submit"]',
+      'style' => 'color',
+    ),
+    'labelColor' => array(
+      'type' => 'css_override',
+      'filter' => 'formframe_safe_css_color_value',
+      'query' => 'c-label',
+      'selector' => 'label',
       'style' => 'color',
     ),
     'linkColor' => array(
