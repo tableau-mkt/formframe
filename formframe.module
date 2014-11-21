@@ -167,6 +167,24 @@ function formframe_drupal_get_form($form_id) {
  * @see formframe_menu()
  */
 function formframe_deliver_html_page($callback_result = NULL) {
+  // Content security policy! And fall-backs.
+  if ($whitelist = variable_get('formframe_origin_whitelist', '')) {
+    // Replace newlines with spaces.
+    $wl = trim(str_replace("\n", ' ', $whitelist));
+
+    // Provide CSP 1.0 header indicating allowed origins.
+    drupal_add_http_header('Content-Security-Policy', 'frame-ancestors ' . $wl);
+
+    // Provide CSP support for IE10 and 11...
+    drupal_add_http_header('X-Content-Security-Policy', 'frame-ancestors ' . $wl);
+
+    // Best attempt at securing IE8 and IE9. Unfortunately, x-frame-options only
+    // allows a single origin, so we check for that here.
+    if (count(explode("\n", $whitelist)) === 1) {
+      drupal_add_http_header('X-Frame-Options', 'ALLOW-FRAME ' . $wl);
+    }
+  }
+
   // If we received a response and we know how to deal with it, deal with it.
   if (isset($callback_result) && !is_int($callback_result)) {
     if (is_null(drupal_get_http_header('Content-Type'))) {
