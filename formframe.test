@@ -1,0 +1,178 @@
+<?php
+
+/**
+ * @file
+ * Form frame simpletest tests.
+ */
+
+
+/**
+ * Parent class containing common helpers.
+ */
+abstract class FormFrameUnitTestCase extends DrupalUnitTestCase {
+
+  /**
+   * @var array
+   */
+  protected $configs = array(
+    'register' => array(
+      'disabled' => FALSE,
+      'api_version' => 1,
+      'path' => 'foo',
+      'title' => 'Foo title',
+      'form' => 'user_register_form',
+      'data' => array(
+        'target' => '_blank',
+        'redirect' => '<front>',
+      ),
+    ),
+    'login' => array(
+      'disabled' => FALSE,
+      'api_version' => 1,
+      'path' => 'bar',
+      'title' => 'Bar title',
+      'form' => 'user_login',
+      'data' => array(
+        'target' => '_parent',
+        'redirect' => '<front>',
+      ),
+    ),
+  );
+
+  /**
+   * @var array
+   */
+  protected $defaultParams = array(
+    'bodyBackgroundColor',
+    'inputBackgroundColor',
+    'inputBorderColor',
+    'inputColor',
+    'submitBackgroundColor',
+    'submitColor',
+    'labelColor',
+    'linkColor',
+  );
+
+  /**
+   * Resets form frame configs to the class defaults.
+   */
+  protected function setupFormFrameConfigs() {
+    drupal_static_reset();
+    $configs = &drupal_static('formframe_get_forms', array());
+    foreach ($this->configs as $name => $config) {
+      $configs[$name] = (object) $config;
+    }
+  }
+
+}
+
+/**
+ * Basic unit tests for the Form Frame module.
+ */
+class FormFrameKeyFunctionsTestCase extends FormFrameUnitTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Form Frame Key Functions',
+      'description' => 'Tests key functions in the Form Frame module.',
+      'group' => 'Form Frame',
+    );
+  }
+
+  public function setUp() {
+    parent::setUp('formframe');
+
+    $this->setupFormFrameConfigs();
+  }
+
+  /**
+   * Tests the formframe_get_forms() function.
+   */
+  public function testFormFrameGetForms() {
+    // Best we can do is assert that the results pull from static cache.
+    $new_config = &drupal_static('formframe_get_forms', array());
+    $new_config = array('foo' => 'bar', 'baz' => 'fizz');
+    $this->assertIdentical(formframe_get_forms(), $new_config, 'Form frame configs pulled from static cache.');
+  }
+
+  /**
+   * Tests the formframe_get_form() function.
+   */
+  public function testFormFrameGetForm() {
+    reset($this->configs);
+    $real_key = key($this->configs);
+    $fake_key = $real_key . '123';
+    $configs = formframe_get_forms();
+    $expected_config = $configs[$real_key];
+
+    $this->assertIdentical(formframe_get_form($fake_key), FALSE, 'Form frame config getter returned FALSE for non-existent config.');
+    $this->assertIdentical(formframe_get_form($real_key), $expected_config, 'Form frame config getter returned expected config.');
+  }
+
+  /**
+   * Tests the formframe_get_forms_by_drupal_form() function.
+   */
+  public function testFormFrameGetFormsByDrupalForm() {
+    $expected = formframe_get_forms();
+    unset($expected['register']);
+
+    $this->assertIdentical(formframe_get_forms_by_drupal_form('user_login'), $expected, 'Form frame config getter by Drupal form ID returned expected configs.');
+    $this->assertIdentical(formframe_get_forms_by_drupal_form('not_real'), array(), 'Form frame config getter by Drupal form ID returned empty array for non-existent form.');
+  }
+
+  /**
+   * Tests the formframe_parameters() function.
+   */
+  public function testFormFrameParameters() {
+    // Ensure all default values are returned.
+    $params = formframe_parameters();
+    foreach ($this->defaultParams as $required) {
+      $this->assertTrue(isset($params[$required]), format_string('Default parameter !param returned by parameter getter.', array(
+        '!param' => $required,
+      )));
+    }
+
+    // Ensure an empty array is returned for non-existent values.
+    $params = formframe_parameters('not_real');
+    $this->assertIdentical($params, array(), 'Parameter getter returned empty array for non-existent parameter type.');
+
+    // Ensure results are statically cached.
+    $cached_params = &drupal_static('formframe_parameters', array());
+    $cached_params['*'] = array('foo' => 'bar', 'baz' => 'fizz');
+    $this->assertIdentical(formframe_parameters(), $cached_params['*'], 'Parameter getter pulls parameters from static cache.');
+  }
+
+  /**
+   * Tests the formframe_parameter_values() function.
+   */
+  public function testFormFrameParameterValues() {
+    // Ensure query normalization occurs (when query key is not provided).
+    $param = 'bodyBackgroundColor';
+    $default_param = 'inputBackgroundColor';
+    $params = formframe_parameters();
+    $cached_params = &drupal_static('formframe_parameters', array());
+    $cached_params['*'] = array($param => $params[$param]);
+    $cached_params['*'][$default_param] = $params[$default_param];
+    unset($cached_params['*'][$param]['query']);
+    $_GET[$param] = 'transparent';
+    $_GET[$params[$default_param]['query']] = 'ffffff';
+
+    $values = formframe_parameter_values();
+    $this->assertTrue(isset($values[$default_param]), 'Parameter value getter used provided query key.');
+    $this->assertEqual($values[$param], $_GET[$param], 'Parameter query key defaulted to parameter name in parameter value getter when no query key was provided.');
+
+    // Ensure callback normalization occurs (when filter key isn't provided).
+    drupal_static_reset('formframe_parameter_values');
+    unset($cached_params['*'][$param]['filter']);
+    $_GET[$param] = '<should be run through "check_plain">';
+    $values = formframe_parameter_values();
+
+    $this->assertEqual($values[$param], check_plain($_GET[$param]), 'Parameter value getter fell back to using check_plain on query parameter values when no filter was provided.');
+
+    // Ensure results are statically cached.
+    $cached_values = &drupal_static('formframe_parameter_values', array());
+    $cached_values = array('*' => array('foo' => 'bar', 'baz' => 'fizz'));
+    $this->assertIdentical(formframe_parameter_values(), $cached_values['*'], 'Parameter value getter pulls parameters from static cache.');
+  }
+
+}

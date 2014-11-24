@@ -6,3 +6,5 @@ configure = admin/structure/form-frames
 dependencies[] = ctools
 
 files[] = plugins/export_ui/formframe_ui.class.php
+
+files[] = formframe.test
