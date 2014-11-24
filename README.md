@@ -1,4 +1,4 @@
-# Form Frame
+# Form Frame [![Build Status](https://travis-ci.org/tableau-mkt/formframe.svg?branch=7.x-1.x)](https://travis-ci.org/tableau-mkt/formframe)
 Embed your Drupal forms anywhere on the internet.
 
 ### Enabling forms for embedding
