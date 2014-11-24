@@ -243,16 +243,10 @@ function formframe_render_page($page) {
 function formframe_form_alter(&$form, &$form_state, $form_id) {
   // Check that this is a formframe-built form.
   if (isset($form_state['build_info']['formframe'])) {
-    $config = $form_state['build_info']['formframe'];
     $path = drupal_get_path('module', 'formframe');
 
-    // Apply redirects as necessary.
-    if (isset($config->data['redirect']) && !empty($config->data['redirect'])) {
-      $form_state['redirect'] = url($config->data['redirect'], array(
-        'absolute' => TRUE,
-        'external' => FALSE,
-      ));
-    }
+    // Add submit handler to handle redirects.
+    $form['#submit'][] = 'formframe_submit_handler';
 
     // Add script to automatically target all links to parent.
     $form['#attached']['js'][] = $path . '/js/target-parent.js';
@@ -293,6 +287,20 @@ function formframe_form_alter(&$form, &$form_state, $form_id) {
         array($config->path),
       );
     }
+  }
+}
+
+/**
+ * Submit handler ensures that the provided redirect configuration sticks.
+ */
+function formframe_submit_handler($form, &$form_state) {
+  $config = $form_state['build_info']['formframe'];
+
+  if (isset($config->data['redirect']) && !empty($config->data['redirect'])) {
+    $form_state['redirect'] = url($config->data['redirect'], array(
+      'absolute' => TRUE,
+      'external' => FALSE,
+    ));
   }
 }
 
