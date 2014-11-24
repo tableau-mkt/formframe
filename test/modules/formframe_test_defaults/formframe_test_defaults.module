@@ -1,0 +1,11 @@
+<?php
+
+/**
+ * Implements hook_ctools_plugin_api().
+ */
+function formframe_test_defaults_ctools_plugin_api() {
+  list($module, $api) = func_get_args();
+  if ($module == "formframe" && $api == "default_formframes") {
+    return array("version" => "1");
+  }
+}

@@ -176,3 +176,97 @@ class FormFrameKeyFunctionsTestCase extends FormFrameUnitTestCase {
   }
 
 }
+
+/**
+ * Parent class containing common helpers.
+ */
+abstract class FormFrameWebTestCase extends DrupalWebTestCase {}
+
+/**
+ * Tests basic form frame behaviors.
+ */
+class FormFrameBasicBehaviorTestCase extends FormFrameWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Form Frame Basic Behaviors',
+      'description' => 'Tests basic behaviors of the Form Frame module.',
+      'group' => 'Form Frame',
+    );
+  }
+
+  public function setUp() {
+    parent::setUp(array(
+      'formframe',
+      'formframe_test_defaults',
+    ));
+  }
+
+  /**
+   * Tests absolute basics about the form frame page.
+   */
+  public function testThatTheExpectedDrupalFormIsLoaded() {
+    // Load the page.
+    $this->drupalGet('form/frame/test-register');
+
+    // Check that the login form is on the page.
+    $this->assertFieldByName('form_id', 'user_register_form', 'Expected form exists on the page.');
+
+    // Check that the title is as expected.
+    $this->assertRaw('<title>Register now</title>', 'Page title was displayed as configured.');
+
+    // Check that the form target is as expected.
+    $this->assertRaw('target="_parent"', 'Form target was displayed as configured.');
+
+    // Check that all required JS files are included on the page.
+    $requiredScripts = array(
+      'formframe/js/framecomm.js',
+      'formframe/js/framecomm-init.js',
+      'formframe/js/target-parent.js',
+    );
+    foreach ($requiredScripts as $script) {
+      $this->assertRaw($script, format_string('Found required script !script in page source.', array(
+        '!script' => $script,
+      )));
+    }
+  }
+
+  /**
+   * Tests that the configured redirect parameter is followed.
+   */
+  public function testFormFrameRedirectConfig() {
+    // Create a user for this test.
+    $account = $this->drupalCreateUser();
+
+    // Sign in as this user via the form frame.
+    $this->drupalPost('form/frame/test-login', array(
+      'name' => $account->name,
+      'pass' => $account->pass_raw,
+    ), 'Log in');
+
+    // Ensure we were redirect to the front page.
+    $this->assertIdentical($this->redirect_count, 1, 'User login attempt ended in a redirect.');
+    $this->assertRaw('<body class="html front logged-in', 'The user was loggined in and directed to the home page.');
+  }
+
+  /**
+   * Tests that dynamic attributes in the loader.js file are replaced.
+   */
+  public function testFormFrameLoaderJavaScriptRewrites() {
+    $this->drupalGet('form/frame/loader.js');
+
+    // Ensure the content-type header is application/javascript.
+    $this->drupalGetHeaders('content-type', 'application/javascript', 'Frame loader JS returned as application/javascript.');
+    $this->assertNoRaw('drupalDynamic', 'Magic drupalDynamic keys have been replaced.');
+
+    // Explicitly ensure the exact expected params are written in.
+    $parameters = formframe_parameters();
+    foreach ($parameters as $name => &$parameter) {
+      $query = isset($parameter['query']) ? $parameter['query'] : $name;
+      $parameter = $query;
+    }
+    $parameters = drupal_json_encode($parameters);
+    $this->assertRaw($parameters, 'Parameter settings were written into the loader.js file as expected.');
+  }
+
+}

@@ -1,0 +1,4 @@
+name = Form Frame Test Config Provider
+description = Provides a default form frame configurations for tests DO NOT ENABLE.
+core = 7.x
+hidden = TRUE
