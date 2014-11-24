@@ -333,7 +333,7 @@ function formframe_apply_configs(&$form, $config) {
  *   An array of form frame configuration objects.
  */
 function formframe_get_forms($reset = FALSE) {
-  $definitions = drupal_static(__FUNCTION__, array());
+  $definitions = &drupal_static(__FUNCTION__, array());
 
   if ($definitions === array() || $reset) {
     ctools_include('export');
