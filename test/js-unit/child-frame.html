@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Form Frame Child Frame Test Suite</title>
+    <!-- Load local jQuery. This can be overridden with a ?jquery=___ param. -->
+    <script src="libs/jquery-loader.js"></script>
+    <!-- Load and initialize other dependencies, like jQuery BBQ and Drupal -->
+    <script src="libs/jquery.bbq/jquery.ba-bbq.min.js"></script>
+    <script src="libs/drupal-init.js"></script>
+    <!-- Load local QUnit. -->
+    <link rel="stylesheet" href="libs/qunit/qunit/qunit.css" media="screen">
+    <script src="libs/qunit/qunit/qunit.js"></script>
+    <!-- Load local lib and tests. -->
+    <script src="../../js/framecomm.js"></script>
+    <script src="../../js/framecomm-init.js"></script>
+    <script src="../../js/target-parent.js"></script>
+    <script src="child-frame-tests.js"></script>
+    <!-- Removing access to jQuery and $. But it'll still be available as _$, if
+         you REALLY want to mess around with jQuery in the console. REMEMBER WE
+         ARE TESTING A PLUGIN HERE, THIS HELPS ENSURE BEST PRACTICES. REALLY. -->
+    <script>window._$ = jQuery.noConflict(true);</script>
+</head>
+<body>
+<div id="qunit"></div>
+<div id="qunit-fixture">
+  <form target="_blank" action="/form/frame/test-login" method="post" id="user-login" accept-charset="UTF-8">
+    <div>
+      <div class="form-item form-type-textfield form-item-name">
+        <label for="edit-name">Username <span class="form-required" title="This field is required.">*</span></label>
+        <input type="text" id="edit-name" name="name" value="" size="60" maxlength="60" class="form-text required" />
+        <div class="description">Enter your Drupal username.</div>
+      </div>
+      <div class="form-item form-type-password form-item-pass">
+        <label for="edit-pass">Password <span class="form-required" title="This field is required.">*</span></label>
+        <input type="password" id="edit-pass" name="pass" size="60" maxlength="128" class="form-text required" />
+        <div class="description">Enter the password that accompanies your username.</div>
+      </div>
+      <input type="hidden" name="form_build_id" value="form-jF8XneYrAkSH2h-E0cde5QRwhdG0aa2h1r6YkYayBXI" />
+      <input type="hidden" name="form_id" value="user_login" />
+      <div class="form-actions form-wrapper" id="edit-actions"><input type="submit" id="edit-submit" name="op" value="Log in" class="form-submit" /></div>
+    </div>
+  </form>
+</div>
+</body>
+</html>
