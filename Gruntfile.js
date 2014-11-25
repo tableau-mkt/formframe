@@ -26,9 +26,7 @@ module.exports = function(grunt) {
           baseUrl: 'http://localhost:<%= connect.server.options.port %>/',
           src: [
             'js/framecomm.js',
-            'js/framecomm-init.js',
-            'js/loader.js',
-            'js/target-parent.js'
+            'js/loader.js'
           ],
           instrumentedFiles: '.temp/',
           htmlReport: 'report/coverage',
