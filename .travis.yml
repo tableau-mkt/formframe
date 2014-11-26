@@ -21,6 +21,13 @@ install:
   - sudo apt-get update > /dev/null
   - sudo apt-get install -y --force-yes php5-cgi php5-mysql
 
+  # install javascript integration test requisites
+  - git clone https://github.com/n1k0/casperjs.git $HOME/casperjs
+  - pushd $HOME/casperjs
+  - git checkout tags/1.1-beta3
+  - export PATH=$PATH:`pwd`/bin
+  - popd
+
   # install javascript unit test requisites
   - npm install
   - npm install -g codeclimate-test-reporter
@@ -39,7 +46,7 @@ before_script:
   # reference and enable form frame in the build site
   - ln -s $(readlink -e $(cd -)) formframe/drupal/sites/all/modules/formframe
   - cd formframe/drupal
-  - drush --yes pm-enable formframe
+  - drush --yes pm-enable formframe formframe_test_defaults
   - drush cc all
 
   # start a web server on port 8080
@@ -51,8 +58,11 @@ script:
   # Run JavaScript unit tests.
   - cd $TRAVIS_BUILD_DIR && grunt test
 
+  # Run JavaScript integration tests.
+  - casperjs test --host=http://127.0.0.1:8080 $TRAVIS_BUILD_DIR/test/js-integration/tests --pre=$TRAVIS_BUILD_DIR/test/js-integration/setup.js --fail-fast
+
   # Run Drupal unit and behavior tests.
   - cd $TRAVIS_BUILD_DIR/../../formframe/drupal && drush test-run 'Form Frame' --uri=http://127.0.0.1:8080
 
 after_script:
-  - codeclimate < $TRAVIS_BUILD_DIR/report/lcov.info
+  - cd $TRAVIS_BUILD_DIR && codeclimate < report/lcov.info
