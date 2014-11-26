@@ -1,6 +1,7 @@
 'use strict';
 
 module.exports = function(grunt) {
+  var supportedJqueryVersions = ['1.4.4', '1.5.2', '1.6.4', '1.7.2', '1.8.3', '1.9.1', '1.10.2', '1.11.1', 'git1', '2.0.3', '2.1.0', '2.1.1', 'git2'];
 
   // Project configuration.
   grunt.initConfig({
@@ -39,9 +40,11 @@ module.exports = function(grunt) {
       },
       all: {
         options: {
-          urls: ['1.4.4', '1.5.2', '1.6.4', '1.7.2', '1.8.3', '1.9.1', '1.10.2', '1.11.1', 'git1', '2.0.3', '2.1.0', '2.1.1', 'git2'].map(function(version) {
+          urls: supportedJqueryVersions.map(function(version) {
             return 'test/js-unit/child-frame.html?jquery=' + version;
-          })
+          }).concat(supportedJqueryVersions.map(function(version) {
+            return 'test/js-unit/parent-frame.html?jquery=' + version;
+          }))
         }
       }
     },
