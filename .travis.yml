@@ -8,6 +8,9 @@ mysql:
   username: root
   encoding: utf8
 
+env:
+  secure: "MEc5c+S4BSfA5WZOZxQTfr686P4W4Nb5aXNTBWF6fRRAqO/RSJbemmTK0NUVLvzTQ7ZXNKJ3DnM98gzBLDetrZ32Z1LMOVp67KB+BIaxBPIKRU+GibMDP0cRE0ezS0biAIEh0JWp/Y/VjHcPH4Ik9y/KeLudU1DZchQHPKWTLBE="
+
 install:
   # install drush 5.x (because 6.x's test-run doesn't exit with proper status code).
   - pear channel-discover pear.drush.org
@@ -18,6 +21,13 @@ install:
   - sudo apt-get update > /dev/null
   - sudo apt-get install -y --force-yes php5-cgi php5-mysql
 
+  # install javascript unit test requisites
+  - npm install
+  - npm install -g codeclimate-test-reporter
+  - npm install -g grunt-cli
+  - npm install -g bower
+  - bower install
+
 before_script:
   # navigate out of module directory to prevent blown stack by recursive module lookup
   - cd ../..
@@ -26,7 +36,7 @@ before_script:
   - mysql -e 'create database formframe_test_db'
   - php -d sendmail_path=`which true` `pear config-get php_dir`/drush/drush.php --yes core-quick-drupal --profile=testing --no-server --db-url=mysql://root:@127.0.0.1/formframe_test_db --enable=simpletest formframe
 
-  # reference and enable scale_addressfield in the build site
+  # reference and enable form frame in the build site
   - ln -s $(readlink -e $(cd -)) formframe/drupal/sites/all/modules/formframe
   - cd formframe/drupal
   - drush --yes pm-enable formframe
@@ -37,4 +47,12 @@ before_script:
   - sleep 4
   - drush vset --yes simpletest_verbose FALSE
 
-script: drush test-run 'Form Frame' --uri=http://127.0.0.1:8080
+script:
+  # Run JavaScript unit tests.
+  - cd $TRAVIS_BUILD_DIR && grunt test
+
+  # Run Drupal unit and behavior tests.
+  - cd $TRAVIS_BUILD_DIR/../../formframe/drupal && drush test-run 'Form Frame' --uri=http://127.0.0.1:8080
+
+after_script:
+  - codeclimate < $TRAVIS_BUILD_DIR/report/lcov.info

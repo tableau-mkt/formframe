@@ -7,6 +7,8 @@
 
     // Add the listener to handle inbound communications.
     window[settings.listener](settings.event, $.fn.framecomm.receive, false);
+
+    return this;
   };
 
   $.fn.framecomm.defaults = {

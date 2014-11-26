@@ -1,4 +1,4 @@
-# Form Frame [![Build Status](https://travis-ci.org/tableau-mkt/formframe.svg?branch=7.x-1.x)](https://travis-ci.org/tableau-mkt/formframe)
+# Form Frame [![Build Status](https://travis-ci.org/tableau-mkt/formframe.svg?branch=7.x-1.x)](https://travis-ci.org/tableau-mkt/formframe) [![Test Coverage](https://codeclimate.com/github/tableau-mkt/formframe/badges/coverage.svg)](https://codeclimate.com/github/tableau-mkt/formframe) [![Code Climate](https://codeclimate.com/github/tableau-mkt/formframe/badges/gpa.svg)](https://codeclimate.com/github/tableau-mkt/formframe)
 Embed your Drupal forms anywhere on the internet.
 
 ### Enabling forms for embedding

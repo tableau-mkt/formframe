@@ -1,0 +1,14 @@
+{
+  "name": "drupal-formframe",
+  "version": "1.0.0-ignored",
+  "private": true,
+  "homepage": "https://drupal.org/project/formframe",
+  "description": "Embed Drupal forms in a frame!",
+  "dependencies" : {
+    "jquery": ">=1.4.4",
+    "jquery.bbq": ">=1.2.1"
+  },
+  "devDependencies": {
+    "qunit": "1.11.0"
+  }
+}
