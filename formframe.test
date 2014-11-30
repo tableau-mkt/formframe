@@ -180,7 +180,14 @@ class FormFrameKeyFunctionsTestCase extends FormFrameUnitTestCase {
 /**
  * Parent class containing common helpers.
  */
-abstract class FormFrameWebTestCase extends DrupalWebTestCase {}
+abstract class FormFrameWebTestCase extends DrupalWebTestCase {
+  /**
+   * @var array
+   */
+  protected $whitelist = array(
+    'http://example.com',
+  );
+}
 
 /**
  * Tests basic form frame behaviors.
@@ -200,6 +207,11 @@ class FormFrameBasicBehaviorTestCase extends FormFrameWebTestCase {
       'formframe',
       'formframe_test_defaults',
     ));
+
+    // Set the origin whitelist variable.
+    variable_set('formframe_origin_whitelist', implode("\n", $this->whitelist));
+    // @todo No longer require this variable to be set true.
+    variable_set('formframe_enforce_csp', TRUE);
   }
 
   /**
@@ -220,6 +232,7 @@ class FormFrameBasicBehaviorTestCase extends FormFrameWebTestCase {
 
     // Check that all required JS files are included on the page.
     $requiredScripts = array(
+      'misc/jquery.ba-bbq.js',
       'formframe/js/framecomm.js',
       'formframe/js/framecomm-init.js',
       'formframe/js/target-parent.js',
@@ -228,6 +241,13 @@ class FormFrameBasicBehaviorTestCase extends FormFrameWebTestCase {
       $this->assertRaw($script, format_string('Found required script !script in page source.', array(
         '!script' => $script,
       )));
+    }
+
+    // Check content security policy headers.
+    $headers = $this->drupalGetHeaders();
+    foreach ($this->whitelist as $origin) {
+      $this->assertTrue(strpos($headers['content-security-policy'], $origin) >= 0, 'Content security policy header set appropriately.');
+      $this->assertTrue(strpos($headers['x-content-security-policy'], $origin) >= 0, 'Fallback content security policy header set appropriately.');
     }
   }
 
