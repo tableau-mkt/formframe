@@ -246,7 +246,7 @@ class FormFrameBasicBehaviorTestCase extends FormFrameWebTestCase {
 
     // Ensure we were redirect to the front page.
     $this->assertIdentical($this->redirect_count, 1, 'User login attempt ended in a redirect.');
-    $this->assertRaw('<body class="html front logged-in', 'The user was loggined in and directed to the home page.');
+    $this->assertRaw('<body class="html front logged-in', 'The user was logged in and directed to the home page.');
   }
 
   /**

@@ -8,8 +8,14 @@ mysql:
   username: root
   encoding: utf8
 
+addons:
+  hosts:
+    - formframe-test.dev
+
 env:
-  secure: "MEc5c+S4BSfA5WZOZxQTfr686P4W4Nb5aXNTBWF6fRRAqO/RSJbemmTK0NUVLvzTQ7ZXNKJ3DnM98gzBLDetrZ32Z1LMOVp67KB+BIaxBPIKRU+GibMDP0cRE0ezS0biAIEh0JWp/Y/VjHcPH4Ik9y/KeLudU1DZchQHPKWTLBE="
+  global:
+    - THOST=http://formframe-test.dev
+    - secure: "MEc5c+S4BSfA5WZOZxQTfr686P4W4Nb5aXNTBWF6fRRAqO/RSJbemmTK0NUVLvzTQ7ZXNKJ3DnM98gzBLDetrZ32Z1LMOVp67KB+BIaxBPIKRU+GibMDP0cRE0ezS0biAIEh0JWp/Y/VjHcPH4Ik9y/KeLudU1DZchQHPKWTLBE="
 
 install:
   # install drush 5.x (because 6.x's test-run doesn't exit with proper status code).
@@ -19,7 +25,7 @@ install:
 
   # install additional requirements
   - sudo apt-get update > /dev/null
-  - sudo apt-get install -y --force-yes php5-cgi php5-mysql
+  - sudo apt-get install -y --force-yes php5-cgi php5-mysql socat
 
   # install javascript integration test requisites
   - git clone https://github.com/n1k0/casperjs.git $HOME/casperjs
@@ -49,20 +55,25 @@ before_script:
   - drush --yes pm-enable formframe formframe_test_defaults
   - drush cc all
 
-  # start a web server on port 8080
+  # start a web server on port 8080; forward port 80 to it.
   - drush runserver 127.0.0.1:8080 &
+  - sudo socat TCP4-LISTEN:80,fork TCP4:127.0.0.1:8080 &
   - sleep 4
   - drush vset --yes simpletest_verbose FALSE
+
+  # whitelist our host and set it as the hard-coded base URL
+  - drush vset --yes formframe_origin_whitelist $THOST
+  - sudo chmod a+w sites/default/settings.php && sudo echo "\$base_url = '$THOST';" >> sites/default/settings.php && sudo chmod a-w sites/default/settings.php
 
 script:
   # Run JavaScript unit tests.
   - cd $TRAVIS_BUILD_DIR && grunt test
 
   # Run JavaScript integration tests.
-  - casperjs test --host=http://127.0.0.1:8080 $TRAVIS_BUILD_DIR/test/js-integration/tests --pre=$TRAVIS_BUILD_DIR/test/js-integration/setup.js --fail-fast
+  - casperjs test --host=$THOST $TRAVIS_BUILD_DIR/test/js-integration/tests --pre=$TRAVIS_BUILD_DIR/test/js-integration/setup.js --fail-fast
 
   # Run Drupal unit and behavior tests.
-  - cd $TRAVIS_BUILD_DIR/../../formframe/drupal && drush test-run 'Form Frame' --uri=http://127.0.0.1:8080
+  - cd $TRAVIS_BUILD_DIR/../../formframe/drupal && drush test-run 'Form Frame' --uri=$THOST
 
 after_script:
   - cd $TRAVIS_BUILD_DIR && codeclimate < report/lcov.info
