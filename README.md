@@ -17,6 +17,8 @@ Form Frame does not expose any forms for embedding by default. To do so, you'll
 need to log in to the main configuration page located at the path
 `admin/structure/form-frames`, where you can add and configure new frames.
 
+![screen_shot_2014-11-29_at_9 55 06_pm](https://cloud.githubusercontent.com/assets/3496491/5236758/bc264670-7812-11e4-8b2e-7b6cc60ef1c3.png)
+
 Each frame you create consists of the following:
 - A path part (all frames are available at a path like `form/frame/your-frame`)
 - A title (displayed in the frame's `<title>`, but also for your convenience)
@@ -37,9 +39,13 @@ deploy them like you deploy other configurations on your site.
 
 ### Embedding forms
 Once you've created a frame, you can generate its embed code by visiting the
-"embed" tab for the frame. In addition to the configurations you specified for
-the frame itself, you can also customize the form for the specific context in
-which it will be embedded through a concept called "parameters."
+"embed" tab for the frame.
+
+![screen_shot_2014-11-29_at_9 58 54_pm](https://cloud.githubusercontent.com/assets/3496491/5236761/fadb9960-7812-11e4-91da-124814e2980f.png)
+
+In addition to the configurations you specified for the frame itself, you can
+also customize the form for the specific context in which it will be embedded
+through a concept called "parameters."
 
 Out of the box, this module provides a number of parameters that allow you to
 override styles for common form components (like input background color, submit
@@ -48,6 +54,8 @@ which will dynamically alter the embed code.
 
 Once you've made any necessary configuration changes, you can copy the given
 embed code and paste it into your target site's markup.
+
+![screen_shot_2014-11-29_at_10 02 27_pm](https://cloud.githubusercontent.com/assets/3496491/5236767/805f5324-7813-11e4-9073-6dba74a78f0e.png)
 
 #### Manually embedding
 If all of the relevant details for embedding the form are already known, you can
