@@ -1,6 +1,15 @@
 # Form Frame [![Build Status](https://travis-ci.org/tableau-mkt/formframe.svg?branch=7.x-1.x)](https://travis-ci.org/tableau-mkt/formframe) [![Test Coverage](https://codeclimate.com/github/tableau-mkt/formframe/badges/coverage.svg)](https://codeclimate.com/github/tableau-mkt/formframe) [![Code Climate](https://codeclimate.com/github/tableau-mkt/formframe/badges/gpa.svg)](https://codeclimate.com/github/tableau-mkt/formframe)
 Embed your Drupal forms anywhere on the internet.
 
+## Potential use-cases
+- Great for running Drupal headless (as a RESTful, pure backend) while still
+  taking advantage of Drupal users and authentication for access control and
+  session management.
+- Run Drupal as a pure CRM (for instance, with [Redhen CRM](http://redhencrm.com)
+  and embed sign-up / registration / lead capture forms across other sites on
+  different platforms / hosts.
+
+
 ## Features
 - Wire up any Drupal form as an embeddable iframe for use on any other website,
 - Configure where the form directs users upon submission,
