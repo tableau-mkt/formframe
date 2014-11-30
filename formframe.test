@@ -220,6 +220,7 @@ class FormFrameBasicBehaviorTestCase extends FormFrameWebTestCase {
 
     // Check that all required JS files are included on the page.
     $requiredScripts = array(
+      'misc/jquery.ba-bbq.js',
       'formframe/js/framecomm.js',
       'formframe/js/framecomm-init.js',
       'formframe/js/target-parent.js',
