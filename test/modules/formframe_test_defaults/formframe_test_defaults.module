@@ -9,3 +9,61 @@ function formframe_test_defaults_ctools_plugin_api() {
     return array("version" => "1");
   }
 }
+
+/**
+ * Implements hook_block_info().
+ */
+function formframe_test_defaults_block_info() {
+  $blocks['login_embed'] = array(
+    'info' => t('Login block as a frame'),
+    'cache' => DRUPAL_NO_CACHE,
+    'status' => TRUE,
+    'region' => 'sidebar_first',
+    'visibility' => BLOCK_VISIBILITY_LISTED,
+    'pages' => '<front>',
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ *
+ * @see test/js-integration/tests/01-loads-frame.js
+ */
+function formframe_test_defaults_block_view($delta = '') {
+  $block = array();
+
+  if ($delta === 'login_embed') {
+    $block['subject'] = t('Embedded login frame');
+    $block['content'] = array(
+      '#type' => 'markup',
+      '#markup' => '',
+    );
+    $block['content']['#markup'] = <<<HTML
+<div class="formframe-container">
+  <object>
+    <param name="formName" value="test-login" />
+    <param name="bodyBackgroundColor" value="dddddd" />
+    <param name="inputBackgroundColor" value="ffffff" />
+    <param name="width" value="300" />
+  </object>
+  <script src="/form/frame/loader.js"></script>
+</div>
+HTML;
+  }
+
+  return $block;
+}
+
+/**
+ * Implements hook_formframe_prerender_alter().
+ *
+ * @see test/js-integration/tests/02-links-target-parent.js
+ */
+function formframe_test_defaults_formframe_prerender_alter(&$form) {
+  $form['#suffix'] = <<<HTML
+<a href="#" target="exists" id="linkTargetExists">Test link 1</a>
+<a href="#" id="linkTargetDoesntExist">Test link 2</a>
+HTML;
+}
