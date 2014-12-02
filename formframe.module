@@ -168,7 +168,7 @@ function formframe_drupal_get_form($form_id) {
  */
 function formframe_deliver_html_page($callback_result = NULL) {
   // Content security policy! And fall-backs.
-  if ($whitelist = variable_get('formframe_origin_whitelist', '') && variable_get('formframe_enforce_csp', FALSE)) {
+  if (variable_get('formframe_enforce_csp', FALSE) && $whitelist = variable_get('formframe_origin_whitelist', '')) {
     // Replace newlines with spaces.
     $wl = trim(str_replace("\n", ' ', $whitelist));
 
