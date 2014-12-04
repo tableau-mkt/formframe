@@ -1,4 +1,4 @@
-window.FF = window.FF || {};
+var FF = window.FF || {};
 
 (function(window, document) {
   var _FF = {};
@@ -272,7 +272,7 @@ try{new CustomEvent('?')}catch(o_O){
 /**
  * Main.
  */
-(function(FF) {
+(function() {
   // Attach and go!
   FF.initialize();
-})(window.FF);
+})();
