@@ -72,7 +72,7 @@ function formframe_embed_code_default($name) {
   $noscript_src = $GLOBALS['base_url'] . base_path() . 'form/frame/' . $name;
   return <<<CODE
 <div class="formframe-container">
-  <object>
+  <object style="display: none">
     <param name="formName" value="$name" />
   </object>
   <noscript><iframe src="$noscript_src"></iframe></noscript>
