@@ -76,7 +76,7 @@ function formframe_embed_code_default($name) {
     <param name="formName" value="$name" />
   </object>
   <noscript><iframe src="$noscript_src"></iframe></noscript>
-  <script src="$script_url" async defer></script>
 </div>
+<script src="$script_url" async defer></script>
 CODE;
 }
