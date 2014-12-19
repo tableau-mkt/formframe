@@ -15,7 +15,7 @@
 
     // Every 100ms, check the document height; if different, send to parent.
     setInterval(function() {
-      var height = document.getElementsByTagName('html')[0].offsetHeight;
+      var height = document.getElementsByTagName('body')[0].offsetHeight;
 
       // Give the parent some context about ourselves. But only on change.
       if (height !== lastHeight) {
