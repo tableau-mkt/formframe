@@ -124,7 +124,7 @@ var FF = window.FF || {};
         param;
 
     for (param in formSettings) {
-      if (param !== 'width' && param !== 'formName') {
+      if (param !== 'width' && param !== 'formName' && formSettings[param] !== null) {
         queryString += param + '=' + encodeURI(formSettings[param]) + '&';
       }
     }
