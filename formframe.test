@@ -249,6 +249,8 @@ class FormFrameBasicBehaviorTestCase extends FormFrameWebTestCase {
       $this->assertTrue(strpos($headers['content-security-policy'], $origin) >= 0, 'Content security policy header set appropriately.');
       $this->assertTrue(strpos($headers['x-content-security-policy'], $origin) >= 0, 'Fallback content security policy header set appropriately.');
     }
+    // Also, check for X-Robots-Tag.
+    $this->assertTrue(strpos($headers['x-robots-tag'], 'noindex') >= 0, 'X-Robots-Tag set to noindex');
   }
 
   /**

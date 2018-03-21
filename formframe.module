@@ -194,6 +194,9 @@ function formframe_deliver_html_page($callback_result = NULL) {
     // Send appropriate HTTP-Header for browsers and search engines.
     drupal_add_http_header('Content-Language', $GLOBALS['language']->language);
 
+    // Prevent search indexing via X-Robots-Tag HTTP header.
+    drupal_add_http_header('X-Robots-Tag', 'noindex');
+
     // Print anything besides a menu constant, assuming it's not NULL or
     // undefined. Allow other modules to do one last alter.
     $config = formframe_get_form(arg(2));
