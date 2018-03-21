@@ -21,9 +21,7 @@ env:
 
 install:
   # install drush 5.x (because 6.x's test-run doesn't exit with proper status code).
-  - pear channel-discover pear.drush.org
-  - pear install drush/drush-5.10.0.0
-  - phpenv rehash
+  - composer global require drush/drush:5.*
 
   # install additional requirements
   - sudo apt-get update > /dev/null
