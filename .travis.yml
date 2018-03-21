@@ -20,8 +20,8 @@ env:
     - secure: "MEc5c+S4BSfA5WZOZxQTfr686P4W4Nb5aXNTBWF6fRRAqO/RSJbemmTK0NUVLvzTQ7ZXNKJ3DnM98gzBLDetrZ32Z1LMOVp67KB+BIaxBPIKRU+GibMDP0cRE0ezS0biAIEh0JWp/Y/VjHcPH4Ik9y/KeLudU1DZchQHPKWTLBE="
 
 install:
-  # install drush 8.x (because 6.x's test-run doesn't exit with proper status code).
-  - composer global require drush/drush:8.*
+  # install drush 7.x (because 6.x's test-run doesn't exit with proper status code).
+  - composer global require drush/drush:7.*
 
   # install additional requirements
   - sudo apt-get update > /dev/null
