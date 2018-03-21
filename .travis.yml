@@ -47,7 +47,7 @@ before_script:
 
   # create new site, stubbing sendmail path with true to prevent delivery errors
   - mysql -e 'create database formframe_test_db'
-  - php -d sendmail_path=`which true` drush --yes core-quick-drupal --profile=testing --no-server --db-url=mysql://root:@127.0.0.1/formframe_test_db --enable=simpletest formframe
+  - php -d sendmail_path=`which true` `which drush` --yes core-quick-drupal --profile=testing --no-server --db-url=mysql://root:@127.0.0.1/formframe_test_db --enable=simpletest formframe
 
   # reference and enable form frame in the build site
   - ln -s $(readlink -e $(cd -)) formframe/drupal/sites/all/modules/formframe
